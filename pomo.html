@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<!--head of the program-->
+
+<head>
+
+  <meta name = "author" contact = "Roshan-coder123"/>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+  <!--Title of the project-->
+  <title>Pomodoro Timer | Macondo Hack Club</title>
+  <style>
+
+body.focus-mode { background-color: #93b5d7; }
+body.short-mode { background-color: #90d7a0; }
+body.long-mode { background-color: #d7c090;}
+
+body.dark { background-color: #1a1a2e; color: #ffffff; }
+body.dark .timer-box { background: rgba(80, 60, 150, 0.9); }
+body.dark #time-display { color: #ffffff; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #93b5d7;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 2rem;
+      color: #626262;
+      margin-bottom: 10px;
+    }
+
+    p.subtitle {
+      color: #695aeb;
+      margin-bottom: 30px;
+      font-size: 0.95rem;
+    }
+
+    .mode-buttons {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+    }
+
+    .mode-buttons button {
+      padding: 8px 18px;
+      border: 2px solid #a1a4a9;
+      background: white;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      color: #7b6d6d;
+    }
+
+    .mode-buttons button.active {
+      background-color: #dc2b18;
+      color: rgb(0, 0, 0);
+      border-color: #e74c3c;
+    }
+
+    .timer-box {
+      background: rgba(158, 134, 230, 0.853);
+      border-radius: 16px;
+      padding: 40px 60px;
+      box-shadow: 0 4px 12px rgb(255, 255, 255);
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    #time-display {
+      font-size: 5rem;
+      font-weight: bold;
+      color: #272323;
+      letter-spacing: 2px;
+    }
+
+    #mode-label {
+      font-size: 1rem;
+      color: #cce607;
+      margin-top: 8px;
+    }
+
+    .control-buttons {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 30px;
+    }
+
+.control-buttons button{
+  padding: 12px 28px;
+  font-size: 1rem;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
+
+    #startBtn {
+      background-color: #f13d3d;
+      color: rgb(255, 254, 254);
+    }
+
+    #resetBtn {
+      background-color: #fefdfd;
+      color: #333;
+    }
+
+.session-info {
+  color:#666;
+  font-size:0.9rem;
+ margin-bottom: 20px;
+}
+
+    .message {
+      font-size: 1rem;
+      color: #de0000;
+      font-weight: bold;
+      height: 24px;
+    }
+
+  </style>
+</head>
+<!--body of the program-->
+<body>
+
+  <h1> Pomodoro Timer</h1>
+
+  <button onclick="toggleDark()" style="margine-bottom:10px; padding:6px 16px; border-radius:none; border:note; cursor:point;">🌙Dark Mode</button>
+
+  <p class="subtitle">Stay focused. Take breaks. Get things done.</p>
+
+  <div class="mode-buttons">
+    <button class="active" onclick="setMode('focus')">Focus</button>
+    <button onclick="setMode('short')">Short Break</button>
+    <button onclick="setMode('long')">Long Break</button>
+  </div>
+
+  <div class="timer-box">
+    <div id="time-display">25:00</div>
+    <div id="mode-label">Focus Session</div>
+  </div>
+
+  <div class="control-buttons">
+    <button id="startBtn" onclick="toggleTimer()">Start</button>
+    <button id="resetBtn" onclick="resetTimer()">Reset</button>
+  </div>
+
+  <div class="session-info" id="session-info">
+    <div>Sessions completed: <span id="sessions-count">0</span></div>
+    <div>Total time completed: <span id="total-time">0h 0m</span></div>
+  </div>
+  <div class="message" id="message"></div>
+<!--scripting the program-->
+<script>
+  const modes = {
+    focus: { label: "Focus Session", minutes: 25 },
+    short: { label: "Short Break", minutes: 5 },
+    long:  { label: "Long Break", minutes: 15 }
+  };
+
+let currentMode = 'focus';
+let timeLeft = 25 * 60;
+let running = false;
+let interval = null;
+let sessions = 0;
+let totalCodingMinutes = 0; 
+
+  function setMode(mode) {
+    clearInterval(interval);
+    running = false;
+    currentMode = mode;
+    timeLeft = modes[mode].minutes*60;
+    document.getElementById('startBtn').textContent = 'Start';
+    document.getElementById('mode-label').textContent = modes[mode].label;
+    document.getElementById('message').textContent = '';
+    updateDisplay();
+
+    document.querySelectorAll('.mode-buttons button').forEach((btn, i) => {
+      btn.classList.remove('active');
+    });
+    const btns = document.querySelectorAll('.mode-buttons button');
+    const index = ['focus','short','long'].indexOf(mode);
+    btns[index].classList.add('active');
+  }
+
+  function toggleTimer() {
+    if (running) {
+      clearInterval(interval);
+      running = false;
+      document.getElementById('startBtn').textContent = 'Resume';
+    } else {
+      running = true;
+      document.getElementById('startBtn').textContent = 'Pause';
+      interval = setInterval(() => {
+        timeLeft--;
+        updateDisplay();
+        if (timeLeft <= 0) {
+          clearInterval(interval);
+          running = false;
+          onFinish();
+        }
+      }, 1000);
+    }
+  }
+
+  function resetTimer() {
+    clearInterval(interval);
+    running = false;
+    timeLeft = modes[currentMode].minutes * 60;
+    document.getElementById('startBtn').textContent = 'Start';
+    document.getElementById('message').textContent = '';
+    updateDisplay();
+  }
+
+  function onFinish() {
+    if (currentMode === 'focus') {
+      sessions++;
+      totalCodingMinutes += 25;
+      document.getElementById('sessions-count').textContent = sessions;
+      updateCodingTimeDisplay();
+     document.getElementById('message').textContent = 'Good job! Take a break.';
+     const beep = new Audio('https://www.soundjay.com/buttons/beep-07.mp3');
+beep.play();
+
+    } else {
+      document.getElementById('message').textContent = ' Break over! Time to focus.';
+    }
+  }
+
+  function updateCodingTimeDisplay() {
+    const hours = Math.floor(totalCodingMinutes / 60);
+    const minutes = totalCodingMinutes % 60;
+    document.getElementById('total-time').textContent = hours + 'h ' + minutes + 'm';
+  }
+   
+  function updateDisplay() {
+    const m = String(Math.floor(timeLeft / 60)).padStart(2, '0');
+    const s = String(timeLeft % 60).padStart(2, '0');
+    document.getElementById('time-display').textContent = m + ':' + s;
+    document.title = m + ':' + s + ' | Pomodoro';
+  }
+
+function toggleDark() {
+     document.body.classList.toggle('dark');
+}
+
+</script> 
+ 
+</body>
+ 
+</html>                     
